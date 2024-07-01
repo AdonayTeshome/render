@@ -1,0 +1,38 @@
+services:
+  - name: credit-commons-node
+    type: web
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    repo: https://github.com/creditcommons/credit-commons-node.git
+    branch: main
+
+  - name: mysql
+    type: database
+    plan: free
+
+jobs:
+  - name: setup-database
+    type: cron
+    env: bash
+    schedule: "*/15 * * * *"  # Runs every 15 minutes
+    command: |
+      if ! mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -e "use $MYSQL_DATABASE"; then
+        echo "Database $MYSQL_DATABASE does not exist. Creating..."
+        mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -e "CREATE DATABASE $MYSQL_DATABASE"
+        mysql -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE < /path/to/your/sqlfile.sql  # Adjust the path to your SQL file
+      else
+        echo "Database $MYSQL_DATABASE already exists."
+      fi
+
+env:
+  DATABASE_URL: ${mysql.internal_url}
+  MYSQL_USER: root
+  MYSQL_PASSWORD: your_mysql_password  # Set your MySQL root password
+  MYSQL_DATABASE: credit_commons_db
+  PATH: /usr/local/mysql/bin:$PATH
+
+files:
+  - path: /path/to/your/sqlfile.sql  # Adjust the path to your SQL file
+    contents: |
+      -- Your SQL file content here
