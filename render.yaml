@@ -8,14 +8,14 @@ services:
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
-        value: postgresql://postgress:fDHHisit7x71XnIB6yD6c43dTBcAmbWH@dpg-cq19fqlds78s73djt3eg-a/nisir
+        value: postgresql://postgress:fDHHisit7x71XnIB6yD6c43dTBcAmbWH@dpg-cq19fqlds78s73djt3eg-a/cc_db
 
 jobs:
   - name: setup-database
     type: cron
     env:
       DATABASE_URL: postgresql://postgress:fDHHisit7x71XnIB6yD6c43dTBcAmbWH@dpg-cq19fqlds78s73djt3eg-a/nisir
-    schedule: "@once"  # Runs once after the service is deployed
+    schedule: "@once"  
     command: |
       curl -o /tmp/sqlfile.sql https://raw.githubusercontent.com/AdonayTeshome/cc_server/main/path/to/sqlfile.sql  # Adjust to the actual path
       if ! psql $DATABASE_URL -c '\l' | grep -q nisir; then
