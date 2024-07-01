@@ -2,35 +2,26 @@ services:
   - name: credit-commons-node
     type: web
     env: node
-    repo: https://github.com/creditcommons/credit-commons-node.git
+    repo: https://github.com/AdonayTeshome/cc_server.git
     branch: main
     buildCommand: npm install
     startCommand: npm start
-
-  - name: mysql
-    type: mysql
-    plan: free
-    version: 5.7
     envVars:
-      - key: MYSQL_ROOT_PASSWORD
-        value: 12345
-      - key: MYSQL_DATABASE
-        value: credit_commons_db
+      - key: DATABASE_URL
+        value: postgresql://postgress:fDHHisit7x71XnIB6yD6c43dTBcAmbWH@dpg-cq19fqlds78s73djt3eg-a/nisir
 
 jobs:
   - name: setup-database
     type: cron
     env:
-      MYSQL_ROOT_PASSWORD: 12345
-      MYSQL_DATABASE: credit_commons_db
-      DATABASE_URL: ${mysql.internal_url}
+      DATABASE_URL: postgresql://postgress:fDHHisit7x71XnIB6yD6c43dTBcAmbWH@dpg-cq19fqlds78s73djt3eg-a/nisir
     schedule: "@once"  # Runs once after the service is deployed
     command: |
-      curl -o /tmp/sqlfile.sql https://your-repository-url/path/to/sqlfile.sql  # URL to your SQL file
-      if ! mysql -u root -p$MYSQL_ROOT_PASSWORD -e "USE $MYSQL_DATABASE"; then
-        echo "Database $MYSQL_DATABASE does not exist. Creating..."
-        mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE $MYSQL_DATABASE"
-        mysql -u root -p$MYSQL_ROOT_PASSWORD $MYSQL_DATABASE < /tmp/sqlfile.sql
+      curl -o /tmp/sqlfile.sql https://raw.githubusercontent.com/AdonayTeshome/cc_server/main/path/to/sqlfile.sql  # Adjust to the actual path
+      if ! psql $DATABASE_URL -c '\l' | grep -q nisir; then
+        echo "Database nisir does not exist. Creating..."
+        psql $DATABASE_URL -c "CREATE DATABASE nisir"
+        psql $DATABASE_URL -d nisir -f /tmp/sqlfile.sql
       else
-        echo "Database $MYSQL_DATABASE already exists."
+        echo "Database nisir already exists."
       fi
