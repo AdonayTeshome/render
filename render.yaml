@@ -2,37 +2,35 @@ services:
   - name: credit-commons-node
     type: web
     env: node
-    buildCommand: npm install
-    startCommand: npm start
     repo: https://github.com/creditcommons/credit-commons-node.git
     branch: main
+    buildCommand: npm install
+    startCommand: npm start
 
   - name: mysql
-    type: database
+    type: mysql
     plan: free
+    version: 5.7
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        value: 12345
+      - key: MYSQL_DATABASE
+        value: credit_commons_db
 
 jobs:
   - name: setup-database
     type: cron
-    env: bash
-    schedule: "*/15 * * * *"  # Runs every 15 minutes
+    env:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: credit_commons_db
+      DATABASE_URL: ${mysql.internal_url}
+    schedule: "@once"  # Runs once after the service is deployed
     command: |
-      if ! mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -e "use $MYSQL_DATABASE"; then
+      curl -o /tmp/sqlfile.sql https://your-repository-url/path/to/sqlfile.sql  # URL to your SQL file
+      if ! mysql -u root -p$MYSQL_ROOT_PASSWORD -e "USE $MYSQL_DATABASE"; then
         echo "Database $MYSQL_DATABASE does not exist. Creating..."
-        mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -e "CREATE DATABASE $MYSQL_DATABASE"
-        mysql -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE < /path/to/your/sqlfile.sql  # Adjust the path to your SQL file
+        mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE $MYSQL_DATABASE"
+        mysql -u root -p$MYSQL_ROOT_PASSWORD $MYSQL_DATABASE < /tmp/sqlfile.sql
       else
         echo "Database $MYSQL_DATABASE already exists."
       fi
-
-env:
-  DATABASE_URL: ${mysql.internal_url}
-  MYSQL_USER: root
-  MYSQL_PASSWORD: your_mysql_password  # Set your MySQL root password
-  MYSQL_DATABASE: credit_commons_db
-  PATH: /usr/local/mysql/bin:$PATH
-
-files:
-  - path: /path/to/your/sqlfile.sql  # Adjust the path to your SQL file
-    contents: |
-      -- Your SQL file content here
